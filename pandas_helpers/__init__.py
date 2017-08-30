@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
+
 
 def flatten_dict_to_dataframe(data_frames_by_label, label_name='label'):
     '''

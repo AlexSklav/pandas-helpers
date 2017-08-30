@@ -1,14 +1,19 @@
 #!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+from __future__ import absolute_import
 
-from distutils.core import setup
+from setuptools import find_packages, setup
 
-setup(name = "pandas-helpers",
-    version = "0.01",
-    description = "A helper package for the pandas data-analysis package.",
-    keywords = "pandas data-analysis",
-    author = "Christian Fobel",
-    url = "https://github.com/cfobel/pandas-helpers",
-    license = "LGPL",
-    long_description = """""",
-    packages = ['pandas_helpers']
-)
+import versioneer
+
+setup(name="pandas-helpers",
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
+      description="A helper package for the pandas data-analysis package.",
+      keywords="pandas data-analysis",
+      author="Christian Fobel",
+      author_email="christian@fobel.net",
+      url="https://github.com/sci-bots/pandas-helpers",
+      license="BSD",
+      install_requires=['pandas', 'scipy'],
+      packages=['pandas_helpers'])
