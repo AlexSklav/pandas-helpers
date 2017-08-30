@@ -1,0 +1,35 @@
+# source will be downloaded prior to filling in jinja templates
+# Example assumes that this folder has setup.py in it
+source:
+  git_url: ../
+
+package:
+  name: pandas-helpers
+{% if GIT_DESCRIBE_NUMBER > '0' %}
+  version: {{ GIT_DESCRIBE_TAG[1:] }}
+{% else %}
+  version: {{ GIT_DESCRIBE_TAG[1:] }}{% if GIT_DESCRIBE_TAG[1:]|length < 3 %}.0{% endif %}
+{% endif %}
+
+build:
+  script: python setup.py install --single-version-externally-managed --record record.txt
+
+requirements:
+  build:
+    - python 2.7*
+    - pandas
+    - scipy
+
+  run:
+    - python 2.7*
+    - pandas
+    - scipy
+
+test:
+  imports:
+    - pandas_helpers
+    - pandas_helpers.stats
+
+about:
+  home: https://github.com/sci-bots/pandas-helpers
+  license: BSD
