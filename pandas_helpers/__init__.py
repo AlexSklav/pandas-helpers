@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import numpy as np
 
@@ -53,3 +55,130 @@ def flatten_dict_to_dataframe(data_frames_by_label, label_name='label'):
                                     ('S%d' % label_len, )
                                     + tuple(df.dtypes)))
     return pd.DataFrame(data_array)
+
+
+class PandasJsonEncoder(json.JSONEncoder):
+    '''
+    .. versionadded:: 0.2
+
+    Encoder to serialize Panda series and data frames to JSON.
+
+    Example
+    -------
+
+    >>> data = pd.Series(range(10))
+    >>> df_data = pd.DataFrame([data.copy() for i in xrange(5)])
+    >>> combined_dump = json.dumps([df_data, data], cls=PandasJsonEncoder)
+    >>> loaded = json.loads(combined_dump, object_hook=pandas_object_hook)
+    >>> assert(loaded[0].equals(df_data))
+    >>> assert(loaded[1].equals(data))
+
+    See also
+    --------
+
+    :func:`pandas_object_hook`
+    '''
+    def default(self, object_):
+        '''
+        Parameters
+        ----------
+        object_ : object
+            Object to serialize to JSON.
+        '''
+        # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+        # TODO Add support for:
+        # TODO  - Multi level index
+        # TODO  - Multi level columns index
+        # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+        # Use `.values.tolist()` since the `tolist()` method of `pandas`
+        # objects does not convert `numpy` numeric types to native Python
+        # types, whereas `numpy.ndarray.tolist()` does.
+
+        # Encode `pandas.Series` as `dict` with `index`, `values`, `dtype`
+        # and `type="Series"`.
+        if isinstance(object_, pd.Series):
+            value = {'index': object_.index.values.tolist(),
+                     'values': object_.values.tolist(),
+                     'index_dtype': str(object_.index.dtype),
+                     'dtype': str(object_.dtype),
+                     'type': 'Series'}
+            if object_.index.name:
+                value['index_name'] = object_.index.name
+            if object_.name:
+                value['name'] = object_.name
+            return value
+        # Encode `pandas.DataFrame` as `dict` with `index`, `values`, and
+        # `type="DataFrame"`.
+        elif isinstance(object_, pd.DataFrame):
+            value = {'index': object_.index.values.tolist(),
+                     'values': object_.values.tolist(),
+                     'columns': object_.columns.tolist(),
+                     'index_dtype': str(object_.index.dtype),
+                     'type': 'DataFrame'}
+            if object_.index.name:
+                value['index_name'] = object_.index.name
+            return value
+        else:
+            try:
+                return {k: getattr(object_, k) for k in dir(object_)
+                        if isinstance(getattr(object_, k),
+                                      (int, float, pd.Series, pd.DataFrame,
+                                       str, unicode))}
+            except Exception:
+                pass
+        return super(PandasJsonEncoder, self).default(object_)
+
+
+def pandas_object_hook(obj):
+    '''
+    .. versionadded:: 0.2
+
+    Decode custom JSON representations of Pandas series and data frames into
+    corresponding Pandas data types.
+
+    Parameters
+    ----------
+    obj : dict
+        JSON object as decoded by the default decoder.
+
+    Example
+    -------
+
+    >>> data = pd.Series(range(10))
+    >>> df_data = pd.DataFrame([data.copy() for i in xrange(5)])
+    >>> combined_dump = json.dumps([df_data, data], cls=PandasJsonEncoder)
+    >>> loaded = json.loads(combined_dump, object_hook=pandas_object_hook)
+    >>> assert(loaded[0].equals(df_data))
+    >>> assert(loaded[1].equals(data))
+
+    See also
+    --------
+
+    :class:`PandasJsonEncoder`
+    '''
+    # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+    # TODO Add support for:
+    # TODO  - Multi level index
+    # TODO  - Multi level columns index
+    # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+    # Decode `pandas.Series` from `dict` with `index`, `values`, `dtype`
+    # and `type="Series"`.
+    if obj.get('type') == 'Series':
+        value = pd.Series(obj['values'], index=np.array(obj['index'],
+                                                        dtype=obj
+                                                        ['index_dtype']),
+                          dtype=obj['dtype'], name=obj.get('name'))
+        value.index.name = obj.get('index_name')
+        return value
+    # Decode `pandas.DataFrame` from `dict` with `index`, `values`,
+    # and `type="DataFrame"`.
+    elif obj.get('type') == 'DataFrame':
+        value = pd.DataFrame(obj['values'],
+                             index=np.array(obj['index'],
+                                            dtype=obj['index_dtype']),
+                             columns=obj['columns'])
+        value.index.name = obj.get('index_name')
+        return value
+    return obj
