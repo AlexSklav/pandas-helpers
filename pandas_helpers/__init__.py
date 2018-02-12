@@ -2,6 +2,8 @@ import json
 
 import pandas as pd
 import numpy as np
+#: .. versionadded:: 0.3
+import six
 
 from ._version import get_versions
 __version__ = get_versions()['version']
@@ -47,13 +49,11 @@ def flatten_dict_to_dataframe(data_frames_by_label, label_name='label'):
     '''
     label_len = max([len(k) for k in data_frames_by_label.keys()])
     data_array = np.array([(label, ) + tuple(d)
-                           for label, df in data_frames_by_label
-                           .iteritems()
+                           for label, df in data_frames_by_label.items()
                            for field, d in df.iterrows()],
-                          dtype=zip([label_name, ]
-                                    + list(df.keys()),
-                                    ('S%d' % label_len, )
-                                    + tuple(df.dtypes)))
+                          dtype=list(zip([label_name, ] + list(df.keys()),
+                                         ('S%d' % label_len, ) +
+                                         tuple(df.dtypes))))
     return pd.DataFrame(data_array)
 
 
@@ -123,8 +123,8 @@ class PandasJsonEncoder(json.JSONEncoder):
             try:
                 return {k: getattr(object_, k) for k in dir(object_)
                         if isinstance(getattr(object_, k),
-                                      (int, float, pd.Series, pd.DataFrame,
-                                       str, unicode))}
+                                      (int, float, pd.Series, pd.DataFrame) +
+                                      six.string_types)}
             except Exception:
                 pass
         return super(PandasJsonEncoder, self).default(object_)
