@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 import numpy as np
-#: .. versionadded:: X.X.X
+#: .. versionadded:: 0.3
 import six
 
 from ._version import get_versions
