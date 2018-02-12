@@ -15,9 +15,10 @@ def significance_comparison(data_vectors):
         # TODO: $N$ should likely be configurable...
         N = 5
         if min_atoms < N:
-            raise ValueError, ('At least %d elements are required in each '
-                               'vector. (%s has %d, %s has %d)' %
-                               (N, k1, len(v1), k2, len(v2)))
+            raise ValueError('At least %d elements are required in each '
+                             'vector. (%s has %d, %s has %d)' % (N, k1,
+                                                                 len(v1), k2,
+                                                                 len(v2)))
         if len(v1) > min_atoms:
             print ('[warning] %s has more elements than %s.  Only using first '
                    '%d elements from %s' % (k1, k2, min_atoms, k1))

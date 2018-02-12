@@ -19,11 +19,15 @@ requirements:
     - python 2.7*
     - pandas
     - scipy
+    #: .. versionadded:: X.X.X
+    - six
 
   run:
     - python 2.7*
     - pandas
     - scipy
+    #: .. versionadded:: X.X.X
+    - six
 
 test:
   imports:
