@@ -1,17 +1,18 @@
+import six
 import json
 
 import pandas as pd
-import numpy as np
-#: .. versionadded:: 0.3
-import six
+
+from typing import Dict, Any, List, Union, Optional
 
 from ._version import get_versions
+
 __version__ = get_versions()['version']
 del get_versions
 
 
-def flatten_dict_to_dataframe(data_frames_by_label, label_name='label'):
-    '''
+def flatten_dict_to_dataframe(data_frames_by_label: Dict[str, pd.DataFrame], label_name: str = 'label') -> pd.DataFrame:
+    """
     Given a dictionary-like container containing `pandas.DataFrame` instances,
     join all data-frames together into a single data-frame, prepended with an
     additional column containing the dictionary key corresponding to the
@@ -46,21 +47,12 @@ def flatten_dict_to_dataframe(data_frames_by_label, label_name='label'):
     3     B  0  3  6
     4     B  1  4  7
     5     B  2  5  8
-    '''
-    label_len = max([len(k) for k in data_frames_by_label.keys()])
-    data_array = np.array([(label, ) + tuple(d)
-                           for label, df in data_frames_by_label.items()
-                           for field, d in df.iterrows()],
-                          dtype=list(zip([label_name, ] + list(df.keys()),
-                                         ('S%d' % label_len, ) +
-                                         tuple(df.dtypes))))
-    return pd.DataFrame(data_array)
+    """
+    return pd.concat(data_frames_by_label, names=[label_name]).reset_index(level=0).reset_index(drop=True)
 
 
 class PandasJsonEncoder(json.JSONEncoder):
-    '''
-    .. versionadded:: 0.2
-
+    """
     Encoder to serialize Panda series and data frames to JSON.
 
     Example
@@ -77,61 +69,60 @@ class PandasJsonEncoder(json.JSONEncoder):
     --------
 
     :func:`pandas_object_hook`
-    '''
-    def default(self, object_):
-        '''
+    """
+
+    def default(self, obj: Any) -> Dict:
+        """
         Parameters
         ----------
-        object_ : object
+        obj : object
             Object to serialize to JSON.
-        '''
-        # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-        # TODO Add support for:
-        # TODO  - Multi level index
-        # TODO  - Multi level columns index
-        # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+        """
+        if isinstance(obj, (pd.Series, pd.DataFrame)):
+            value = {'index': obj.index.to_list(),
+                     'values': obj.values.tolist(),
+                     }
+            if isinstance(obj, pd.DataFrame):
+                value['type'] = 'DataFrame'
+                value['dtypes'] = [str(i) for i in obj.dtypes.to_list()]
+                value['columns'] = obj.columns.to_list()
 
-        # Use `.values.tolist()` since the `tolist()` method of `pandas`
-        # objects does not convert `numpy` numeric types to native Python
-        # types, whereas `numpy.ndarray.tolist()` does.
+                if isinstance(obj.columns, pd.MultiIndex):
+                    value['column_names'] = list(obj.columns.names)
+                    value['multi_columns'] = True
+                else:
+                    if obj.columns.name:
+                        value['column_name'] = list(obj.columns.names)
+                    value['multi_columns'] = False
+            else:
+                value['type'] = 'Series'
+                value['dtype'] = str(obj.dtype)
+                if obj.name:
+                    value['name'] = obj.name
 
-        # Encode `pandas.Series` as `dict` with `index`, `values`, `dtype`
-        # and `type="Series"`.
-        if isinstance(object_, pd.Series):
-            value = {'index': object_.index.values.tolist(),
-                     'values': object_.values.tolist(),
-                     'index_dtype': str(object_.index.dtype),
-                     'dtype': str(object_.dtype),
-                     'type': 'Series'}
-            if object_.index.name:
-                value['index_name'] = object_.index.name
-            if object_.name:
-                value['name'] = object_.name
-            return value
-        # Encode `pandas.DataFrame` as `dict` with `index`, `values`, and
-        # `type="DataFrame"`.
-        elif isinstance(object_, pd.DataFrame):
-            value = {'index': object_.index.values.tolist(),
-                     'values': object_.values.tolist(),
-                     'columns': object_.columns.tolist(),
-                     'index_dtype': str(object_.index.dtype),
-                     'type': 'DataFrame'}
-            if object_.index.name:
-                value['index_name'] = object_.index.name
+            if isinstance(obj.index, pd.MultiIndex):
+                value['index_dtypes'] = [str(i) for i in obj.index.dtypes.to_list()]
+                value['index_names'] = list(obj.index.names)
+                value['multi_index'] = True
+            else:
+                value['index_dtype'] = str(obj.index.dtype)
+                if obj.index.name:
+                    value['index_name'] = obj.index.name
+                value['multi_index'] = False
+
             return value
         else:
             try:
-                return {k: getattr(object_, k) for k in dir(object_)
-                        if isinstance(getattr(object_, k),
-                                      (int, float, pd.Series, pd.DataFrame) +
-                                      six.string_types)}
+                return {k: getattr(obj, k) for k in dir(obj) if isinstance(getattr(obj, k),
+                                                                           (int, float, pd.Series,
+                                                                            pd.DataFrame) + six.string_types)}
             except Exception:
                 pass
-        return super(PandasJsonEncoder, self).default(object_)
+        return super().default(obj)
 
 
-def pandas_object_hook(obj):
-    '''
+def pandas_object_hook(obj: Dict[str, Any]) -> Union[pd.DataFrame, Any]:
+    """
     .. versionadded:: 0.2
 
     Decode custom JSON representations of Pandas series and data frames into
@@ -156,29 +147,26 @@ def pandas_object_hook(obj):
     --------
 
     :class:`PandasJsonEncoder`
-    '''
-    # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-    # TODO Add support for:
-    # TODO  - Multi level index
-    # TODO  - Multi level columns index
-    # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-
+    """
     # Decode `pandas.Series` from `dict` with `index`, `values`, `dtype`
     # and `type="Series"`.
-    if obj.get('type') == 'Series':
-        value = pd.Series(obj['values'], index=np.array(obj['index'],
-                                                        dtype=obj
-                                                        ['index_dtype']),
-                          dtype=obj['dtype'], name=obj.get('name'))
-        value.index.name = obj.get('index_name')
-        return value
-    # Decode `pandas.DataFrame` from `dict` with `index`, `values`,
-    # and `type="DataFrame"`.
-    elif obj.get('type') == 'DataFrame':
-        value = pd.DataFrame(obj['values'],
-                             index=np.array(obj['index'],
-                                            dtype=obj['index_dtype']),
-                             columns=obj['columns'])
-        value.index.name = obj.get('index_name')
+    if obj.get('type') in ['Series', 'DataFrame']:
+        if obj.get('multi_index'):
+            index = pd.MultiIndex.from_tuples(obj['index'], names=obj['index_names'])
+            # TODO Add Support for changing the dtypes of multiIndex
+        else:
+            index = pd.Index(obj['index'], dtype=obj['index_dtype'], name=obj.get('index_name'))
+
+        if obj.get('type') == 'Series':
+            value = pd.Series(obj['values'], index=index, dtype=obj['dtype'], name=obj.get('name'))
+        else:
+            if obj.get('multi_columns'):
+                columns = pd.MultiIndex.from_tuples(obj['columns'], names=obj['column_names'])
+                # TODO Add Support for changing the dtypes of multiIndex
+            else:
+                columns = obj['columns']
+
+            value = pd.DataFrame(obj['values'], index=index, columns=columns)
+
         return value
     return obj

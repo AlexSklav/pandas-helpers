@@ -3,13 +3,10 @@
 {% else %}
 {% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] %}
 {% endif %}
-# source will be downloaded prior to filling in jinja templates
-# Example assumes that this folder has setup.py in it
-source:
-  git_url: ../
-
+{% set PKG_NAME = 'pandas-helpers' %}
+{% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
 package:
-  name: pandas-helpers
+  name: {{ PKG_NAME }}
   version: {{ GIT_VERSION }}
 
 build:
@@ -18,24 +15,29 @@ build:
 
 requirements:
   build:
-    - python
+    - python >=3.6
     - pandas
     - scipy
-    #: .. versionadded:: 0.3
     - six
 
   run:
-    - python
+    - python >=3.6
     - pandas
     - scipy
-    #: .. versionadded:: 0.3
     - six
+    - openpyxl
 
 test:
   imports:
-    - pandas_helpers
-    - pandas_helpers.stats
+    - {{ MODULE_NAME }}
+    - {{ MODULE_NAME }}.stats
 
 about:
   home: https://github.com/sci-bots/pandas-helpers
   license: BSD
+
+# source will be downloaded prior to filling in jinja templates
+# Example assumes that this folder has setup.py in it
+source:
+#  git_url: ../
+  path: ..
