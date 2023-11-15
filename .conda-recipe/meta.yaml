@@ -15,16 +15,14 @@ build:
 
 requirements:
   build:
-    - python >=3.6
+    - python >=3.8
     - pandas
     - scipy
-    - six
 
   run:
-    - python >=3.6
+    - python >=3.8
     - pandas
     - scipy
-    - six
     - openpyxl
 
 test:
@@ -35,6 +33,7 @@ test:
 about:
   home: https://github.com/sci-bots/pandas-helpers
   license: BSD
+  summary: Helper package for the pandas data-analysis package.
 
 # source will be downloaded prior to filling in jinja templates
 # Example assumes that this folder has setup.py in it
