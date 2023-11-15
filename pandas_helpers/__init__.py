@@ -1,4 +1,3 @@
-import six
 import json
 
 import pandas as pd
@@ -114,8 +113,7 @@ class PandasJsonEncoder(json.JSONEncoder):
         else:
             try:
                 return {k: getattr(obj, k) for k in dir(obj) if isinstance(getattr(obj, k),
-                                                                           (int, float, pd.Series,
-                                                                            pd.DataFrame) + six.string_types)}
+                                                                           (int, float, str, pd.Series, pd.DataFrame))}
             except Exception:
                 pass
         return super().default(obj)
