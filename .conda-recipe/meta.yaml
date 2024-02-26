@@ -15,12 +15,12 @@ build:
 
 requirements:
   build:
-    - python >=3.8
+    - python >=3.6
     - pandas
     - scipy
 
   run:
-    - python >=3.8
+    - python >=3.6
     - pandas
     - scipy
     - openpyxl
