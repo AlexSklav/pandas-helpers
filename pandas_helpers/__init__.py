@@ -21,10 +21,10 @@ def flatten_dict_to_dataframe(data_frames_by_label: Dict[str, pd.DataFrame], lab
 
     >>> data_frames_by_label = {'A': pd.DataFrame({'a': range(3), 'b': range(3, 6), 'c': range(6, 9)}),
                                 'B': pd.DataFrame({'a': range(3), 'b': range(3, 6), 'c': range(6, 9)})}
-    >>> for k, v in data_frames_by_label.iteritems():
-        print '# %s #' % k
-        print v
-        print '-' * 15
+    >>> for k, v in data_frames_by_label.items():
+        print('# %s #' % k)
+        print(v)
+        print('-' * 15)
     ...
     # A #
        a  b  c
@@ -58,7 +58,7 @@ class PandasJsonEncoder(json.JSONEncoder):
     -------
 
     >>> data = pd.Series(range(10))
-    >>> df_data = pd.DataFrame([data.copy() for i in xrange(5)])
+    >>> df_data = pd.DataFrame([data.copy() for i in range(5)])
     >>> combined_dump = json.dumps([df_data, data], cls=PandasJsonEncoder)
     >>> loaded = json.loads(combined_dump, object_hook=pandas_object_hook)
     >>> assert(loaded[0].equals(df_data))
@@ -135,7 +135,7 @@ def pandas_object_hook(obj: Dict[str, Any]) -> Union[pd.DataFrame, Any]:
     -------
 
     >>> data = pd.Series(range(10))
-    >>> df_data = pd.DataFrame([data.copy() for i in xrange(5)])
+    >>> df_data = pd.DataFrame([data.copy() for i in range(5)])
     >>> combined_dump = json.dumps([df_data, data], cls=PandasJsonEncoder)
     >>> loaded = json.loads(combined_dump, object_hook=pandas_object_hook)
     >>> assert(loaded[0].equals(df_data))
